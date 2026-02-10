@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora de Dias Habiles</title>
+  <link rel="icon" href="icons/calendar_icon.png">
+  <title>Calculadora de Días Hábiles</title>
   <style>
     /* ===== RESET & BASE ===== */
     *,
@@ -581,8 +582,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
         </svg>
       </div>
-      <h1>Calculadora de Dias Habiles</h1>
-      <p>Ingresa una fecha de inicio y la cantidad de dias habiles para calcular la fecha final.</p>
+      <h1>Calculadora de Días Hábiles</h1>
+      <p>Ingresa una fecha de inicio y la cantidad de días hábiles para calcular la fecha final.</p>
     </div>
 
     <!-- FORM -->
@@ -605,7 +606,7 @@
         </div>
 
         <div class="form-group">
-          <label for="numDays">Cantidad de dias habiles</label>
+          <label for="numDays">Cantidad de días hábiles</label>
           <div class="input-wrapper">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75V18m15-8.25-3.09-5.4a2.25 2.25 0 0 0-1.956-1.134H5.808a2.25 2.25 0 0 0-1.956 1.134L.75 9.75m21 0H.75m21 0-1.228 8.59A2.25 2.25 0 0 1 18.29 20.5H5.71a2.25 2.25 0 0 1-2.232-1.91L2.25 9.75" />
@@ -642,11 +643,11 @@
           <span class="result-row-value" id="summaryStart">--</span>
         </div>
         <div class="result-row">
-          <span class="result-row-label">Dias habiles</span>
+          <span class="result-row-label">Días hábiles</span>
           <span class="result-row-value" id="summaryDays">--</span>
         </div>
         <div class="result-row">
-          <span class="result-row-label">Dias naturales transcurridos</span>
+          <span class="result-row-label">Días naturales transcurridos</span>
           <span class="result-row-value" id="summaryNatural">--</span>
         </div>
         <div class="result-row">
@@ -661,7 +662,7 @@
     </div>
   </div>
 
-  <p class="footer-note">Los dias habiles excluyen sabados, domingos y feriados de Argentina.</p>
+  <p class="footer-note">Los días hábiles excluyen sabados, domingos y feriados de Argentina.</p>
 
   <!-- HOLIDAYS CARD -->
   <div class="holidays-card" id="holidaysCard">
