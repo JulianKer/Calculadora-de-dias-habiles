@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Dias Habiles</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --color-bg: #f8f9fc;
+      --color-surface: #ffffff;
+      --color-primary: #1a73e8;
+      --color-primary-hover: #1558b0;
+      --color-text: #1e293b;
+      --color-text-muted: #64748b;
+      --color-border: #e2e8f0;
+      --color-error: #dc2626;
+      --color-error-bg: #fef2f2;
+      --color-success: #16a34a;
+      --color-success-bg: #f0fdf4;
+      --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.12);
+      --transition: 0.2s ease;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+      line-height: 1.5;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 520px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 32px 32px 0;
+    }
+
+    .card-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+
+    .card-header p {
+      margin-top: 8px;
+      font-size: 0.9375rem;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    .card-body {
+      padding: 28px 32px 32px;
+    }
+
+    /* ===== ICON HEADER ===== */
+    .icon-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .icon-badge svg {
+      width: 24px;
+      height: 24px;
+      color: #fff;
+    }
+
+    /* ===== FORM ===== */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-of-type {
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--color-text-muted);
+      pointer-events: none;
+      transition: color var(--transition);
+    }
+
+    input[type="date"],
+    input[type="number"] {
+      width: 100%;
+      padding: 12px 14px 12px 44px;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      color: var(--color-text);
+      background: var(--color-surface);
+      border: 2px solid var(--color-border);
+      border-radius: 10px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="date"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+    }
+
+    .input-wrapper:focus-within svg {
+      color: var(--color-primary);
+    }
+
+    input.input-error {
+      border-color: var(--color-error);
+    }
+
+    input.input-error:focus {
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+    }
+
+    input.input-success {
+      border-color: var(--color-success);
+    }
+
+    input.input-success:focus {
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+    }
+
+    /* ===== ERROR MESSAGE ===== */
+    .error-msg {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 0.8125rem;
+      color: var(--color-error);
+      animation: slideDown 0.2s ease;
+    }
+
+    .error-msg.visible {
+      display: flex;
+    }
+
+    .error-msg svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== BUTTON ===== */
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: var(--color-primary);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background var(--transition), transform 0.1s ease,
+        box-shadow var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: var(--color-primary-hover);
+      box-shadow: 0 4px 16px rgba(26, 115, 232, 0.3);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ===== DIVIDER ===== */
+    .divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: 0 32px;
+    }
+
+    /* ===== RESULT ===== */
+    .result-section {
+      padding: 24px 32px 32px;
+      display: none;
+    }
+
+    .result-section.visible {
+      display: block;
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+      margin-bottom: 8px;
+    }
+
+    .result-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      line-height: 1.2;
+    }
+
+    .result-detail {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--color-bg);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+
+    .result-row-label {
+      color: var(--color-text-muted);
+    }
+
+    .result-row-value {
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* ===== HOLIDAYS CARD ===== */
+    .holidays-card {
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 520px;
+      margin-top: 20px;
+      overflow: hidden;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .holidays-header {
+      padding: 28px 32px 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .holidays-header .icon-badge {
+      background: #e55c2a;
+      flex-shrink: 0;
+      margin-bottom: 0;
+    }
+
+    .holidays-header-text h2 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--color-text);
+      line-height: 1.3;
+    }
+
+    .holidays-header-text p {
+      margin-top: 2px;
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+    }
+
+    .holidays-body {
+      padding: 20px 32px 28px;
+    }
+
+    .holidays-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 24px 0;
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+    }
+
+    .holidays-loading svg {
+      width: 18px;
+      height: 18px;
+      animation: spin 1s linear infinite;
+      color: var(--color-primary);
+    }
+
+    .holidays-error {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      background: var(--color-error-bg);
+      border-radius: 10px;
+      font-size: 0.8125rem;
+      color: var(--color-error);
+    }
+
+    .holidays-error svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .holidays-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .holiday-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .holiday-item:last-child {
+      border-bottom: none;
+    }
+
+    .holiday-date-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: var(--color-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .holiday-date-badge .hd-day {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .holiday-date-badge .hd-month {
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+      margin-top: 1px;
+    }
+
+    .holiday-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .holiday-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text);
+      line-height: 1.3;
+    }
+
+    .holiday-type {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .holiday-weekday {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--color-primary);
+      background: rgba(26, 115, 232, 0.08);
+      padding: 3px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .holidays-count {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+    }
+
+    .holidays-count strong {
+      color: var(--color-text);
+    }
+
+    /* ===== FOOTER ===== */
+    .footer-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 560px) {
+      body {
+        padding: 16px 12px;
+        justify-content: flex-start;
+        padding-top: 32px;
+      }
+
+      .card-header {
+        padding: 24px 20px 0;
+      }
+
+      .card-header h1 {
+        font-size: 1.25rem;
+      }
+
+      .card-body {
+        padding: 24px 20px 28px;
+      }
+
+      .divider {
+        margin: 0 20px;
+      }
+
+      .result-section {
+        padding: 20px 20px 28px;
+      }
+
+      .result-value {
+        font-size: 1.5rem;
+      }
+
+      .icon-badge {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+      }
+
+      .icon-badge svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .holidays-header {
+        padding: 20px 20px 0;
+      }
+
+      .holidays-body {
+        padding: 16px 20px 24px;
+      }
+
+      .holiday-weekday {
+        display: none;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .card-header h1 {
+        font-size: 1.125rem;
+      }
+
+      input[type="date"],
+      input[type="number"] {
+        font-size: 0.875rem;
+        padding: 10px 12px 10px 40px;
+      }
+
+      .btn {
+        padding: 12px 20px;
+        font-size: 0.875rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="icon-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+        </svg>
+      </div>
+      <h1>Calculadora de Dias Habiles</h1>
+      <p>Ingresa una fecha de inicio y la cantidad de dias habiles para calcular la fecha final.</p>
+    </div>
+
+    <!-- FORM -->
+    <div class="card-body">
+      <form id="diasForm" novalidate>
+        <div class="form-group">
+          <label for="startDate">Fecha de inicio</label>
+          <div class="input-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+            </svg>
+            <input type="date" id="startDate" required />
+          </div>
+          <div class="error-msg" id="startDateError">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            </svg>
+            <span>Por favor selecciona una fecha valida.</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="numDays">Cantidad de dias habiles</label>
+          <div class="input-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75V18m15-8.25-3.09-5.4a2.25 2.25 0 0 0-1.956-1.134H5.808a2.25 2.25 0 0 0-1.956 1.134L.75 9.75m21 0H.75m21 0-1.228 8.59A2.25 2.25 0 0 1 18.29 20.5H5.71a2.25 2.25 0 0 1-2.232-1.91L2.25 9.75" />
+            </svg>
+            <input type="number" id="numDays" min="0" step="1" placeholder="Ej: 10" required />
+          </div>
+          <div class="error-msg" id="numDaysError">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            </svg>
+            <span>Ingresa un numero entero mayor o igual a 0.</span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" id="submitBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75V18m15-8.25-3.09-5.4a2.25 2.25 0 0 0-1.956-1.134H5.808a2.25 2.25 0 0 0-1.956 1.134L.75 9.75m21 0H.75m21 0-1.228 8.59A2.25 2.25 0 0 1 18.29 20.5H5.71a2.25 2.25 0 0 1-2.232-1.91L2.25 9.75" />
+          </svg>
+          Calcular fecha final
+        </button>
+      </form>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="divider" id="resultDivider" style="display:none;"></div>
+
+    <!-- RESULT -->
+    <div class="result-section" id="resultSection">
+      <div class="result-label">Fecha final estimada</div>
+      <div class="result-value" id="resultDate">--</div>
+      <div class="result-detail">
+        <div class="result-row">
+          <span class="result-row-label">Fecha de inicio</span>
+          <span class="result-row-value" id="summaryStart">--</span>
+        </div>
+        <div class="result-row">
+          <span class="result-row-label">Dias habiles</span>
+          <span class="result-row-value" id="summaryDays">--</span>
+        </div>
+        <div class="result-row">
+          <span class="result-row-label">Dias naturales transcurridos</span>
+          <span class="result-row-value" id="summaryNatural">--</span>
+        </div>
+        <div class="result-row">
+          <span class="result-row-label">Fines de semana omitidos</span>
+          <span class="result-row-value" id="summaryWeekends">--</span>
+        </div>
+        <div class="result-row">
+          <span class="result-row-label">Feriados omitidos</span>
+          <span class="result-row-value" id="summaryHolidays">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Los dias habiles excluyen sabados, domingos y feriados de Argentina.</p>
+
+  <!-- HOLIDAYS CARD -->
+  <div class="holidays-card" id="holidaysCard">
+    <div class="holidays-header">
+      <div class="icon-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
+        </svg>
+      </div>
+      <div class="holidays-header-text">
+        <h2 id="holidaysTitle">Feriados de Argentina</h2>
+        <p id="holidaysSubtitle">Cargando feriados...</p>
+      </div>
+    </div>
+    <div class="holidays-body" id="holidaysBody">
+      <div class="holidays-loading" id="holidaysLoading">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+        <span>Cargando feriados...</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var form = document.getElementById("diasForm");
+      var startDateInput = document.getElementById("startDate");
+      var numDaysInput = document.getElementById("numDays");
+      var startDateError = document.getElementById("startDateError");
+      var numDaysError = document.getElementById("numDaysError");
+      var resultSection = document.getElementById("resultSection");
+      var resultDivider = document.getElementById("resultDivider");
+      var resultDate = document.getElementById("resultDate");
+      var summaryStart = document.getElementById("summaryStart");
+      var summaryDays = document.getElementById("summaryDays");
+      var summaryNatural = document.getElementById("summaryNatural");
+      var summaryWeekends = document.getElementById("summaryWeekends");
+      var summaryHolidays = document.getElementById("summaryHolidays");
+      var submitBtn = document.getElementById("submitBtn");
+
+      // Cache de feriados por año: { 2026: Set("2026-01-01", ...), ... }
+      var holidaysCache = {};
+      // Raw data cache: { 2026: [{fecha, nombre, tipo}, ...], ... }
+      var holidaysRawCache = {};
+
+      var holidaysTitle = document.getElementById("holidaysTitle");
+      var holidaysSubtitle = document.getElementById("holidaysSubtitle");
+      var holidaysBody = document.getElementById("holidaysBody");
+
+      // Short month names in Spanish
+      var monthNames = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+      var weekdayNames = ["Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sabado"];
+
+      // Set default date to today
+      var today = new Date();
+      var yyyy = today.getFullYear();
+      var mm = String(today.getMonth() + 1).padStart(2, "0");
+      var dd = String(today.getDate()).padStart(2, "0");
+      startDateInput.value = yyyy + "-" + mm + "-" + dd;
+
+      // Realtime validation
+      startDateInput.addEventListener("input", function () {
+        clearFieldError(startDateInput, startDateError);
+      });
+
+      numDaysInput.addEventListener("input", function () {
+        clearFieldError(numDaysInput, numDaysError);
+        var val = numDaysInput.value;
+        if (val !== "" && Number(val) < 0) {
+          numDaysInput.value = 0;
+        }
+      });
+
+      // Block minus, e, + keys on number input
+      numDaysInput.addEventListener("keydown", function (e) {
+        if (e.key === "-" || e.key === "e" || e.key === "E" || e.key === "+") {
+          e.preventDefault();
+        }
+      });
+
+      // Block paste of negative numbers
+      numDaysInput.addEventListener("paste", function (e) {
+        var clipboardData = e.clipboardData || window.clipboardData;
+        var pastedData = clipboardData.getData("Text");
+        if (pastedData && Number(pastedData) < 0) {
+          e.preventDefault();
+        }
+      });
+
+      // Fetch holidays for a given year, returns a Promise that resolves to a Set of date strings
+      function fetchHolidays(year) {
+        if (holidaysCache[year]) {
+          return Promise.resolve(holidaysCache[year]);
+        }
+        return fetch("https://api.argentinadatos.com/v1/feriados/" + year)
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error("API error");
+            }
+            return response.json();
+          })
+          .then(function (data) {
+            var set = new Set();
+            var rawList = [];
+            if (Array.isArray(data)) {
+              data.forEach(function (item) {
+                if (item.fecha) {
+                  set.add(item.fecha);
+                  rawList.push({
+                    fecha: item.fecha,
+                    nombre: item.nombre || "Feriado",
+                    tipo: item.tipo || ""
+                  });
+                }
+              });
+            }
+            holidaysCache[year] = set;
+            holidaysRawCache[year] = rawList;
+            return set;
+          })
+          .catch(function () {
+            holidaysRawCache[year] = [];
+            return new Set();
+          });
+      }
+
+      // Collect all unique years that span from startDate across businessDays (estimate max range)
+      function getYearsInRange(startDate, businessDays) {
+        var years = [];
+        var startYear = startDate.getFullYear();
+        // Worst case: ~1.5x business days in natural days + buffer for holidays
+        var estimatedEndYear = startYear + Math.ceil((businessDays * 2) / 365) + 1;
+        for (var y = startYear; y <= estimatedEndYear; y++) {
+          years.push(y);
+        }
+        return years;
+      }
+
+      // Format a Date as YYYY-MM-DD
+      function toDateString(date) {
+        var y = date.getFullYear();
+        var m = String(date.getMonth() + 1).padStart(2, "0");
+        var d = String(date.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + d;
+      }
+
+      // Check if a date string is a holiday
+      function isHoliday(dateStr, allHolidays) {
+        for (var i = 0; i < allHolidays.length; i++) {
+          if (allHolidays[i].has(dateStr)) return true;
+        }
+        return false;
+      }
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var isValid = true;
+
+        // Validate date
+        if (!startDateInput.value) {
+          showFieldError(startDateInput, startDateError);
+          isValid = false;
+        } else {
+          clearFieldError(startDateInput, startDateError);
+        }
+
+        // Validate number
+        var numVal = numDaysInput.value;
+        if (numVal === "" || Number(numVal) < 0 || !Number.isInteger(Number(numVal))) {
+          showFieldError(numDaysInput, numDaysError);
+          isValid = false;
+        } else {
+          clearFieldError(numDaysInput, numDaysError);
+        }
+
+        if (!isValid) return;
+
+        var businessDays = parseInt(numVal, 10);
+        var startParts = startDateInput.value.split("-");
+        var startYear = parseInt(startParts[0], 10);
+        var startMonth = parseInt(startParts[1], 10) - 1;
+        var startDay = parseInt(startParts[2], 10);
+        var startDate = new Date(startYear, startMonth, startDay);
+
+        // Disable button while loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg> Cargando feriados...';
+
+        // Fetch holidays for all years in possible range
+        var years = getYearsInRange(startDate, businessDays);
+        var promises = years.map(function (y) {
+          return fetchHolidays(y);
+        });
+
+        Promise.all(promises).then(function (allHolidaySets) {
+          // Calculate business days excluding weekends and holidays
+          var current = new Date(startYear, startMonth, startDay);
+          var added = 0;
+          var weekendsSkipped = 0;
+          var holidaysSkipped = 0;
+          var totalNaturalDays = 0;
+
+          while (added < businessDays) {
+            current.setDate(current.getDate() + 1);
+            totalNaturalDays++;
+            var dayOfWeek = current.getDay();
+
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+              weekendsSkipped++;
+            } else if (isHoliday(toDateString(current), allHolidaySets)) {
+              holidaysSkipped++;
+            } else {
+              added++;
+            }
+          }
+
+          // Format dates in Spanish
+          var options = {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          };
+
+          var formattedEnd = current.toLocaleDateString("es-ES", options);
+          formattedEnd = formattedEnd.charAt(0).toUpperCase() + formattedEnd.slice(1);
+
+          var startDisplay = new Date(startYear, startMonth, startDay);
+          var formattedStart = startDisplay.toLocaleDateString("es-ES", options);
+          formattedStart = formattedStart.charAt(0).toUpperCase() + formattedStart.slice(1);
+
+          // Display results
+          resultDate.textContent = formattedEnd;
+          summaryStart.textContent = formattedStart;
+          summaryDays.textContent = businessDays;
+          summaryNatural.textContent = totalNaturalDays;
+          summaryWeekends.textContent = weekendsSkipped;
+          summaryHolidays.textContent = holidaysSkipped;
+
+          resultDivider.style.display = "block";
+          resultSection.classList.add("visible");
+          resultSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+          // Re-enable button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75V18m15-8.25-3.09-5.4a2.25 2.25 0 0 0-1.956-1.134H5.808a2.25 2.25 0 0 0-1.956 1.134L.75 9.75m21 0H.75m21 0-1.228 8.59A2.25 2.25 0 0 1 18.29 20.5H5.71a2.25 2.25 0 0 1-2.232-1.91L2.25 9.75" /></svg> Calcular fecha final';
+        });
+      });
+
+      function showFieldError(input, errorEl) {
+        input.classList.add("input-error");
+        input.classList.remove("input-success");
+        errorEl.classList.add("visible");
+      }
+
+      function clearFieldError(input, errorEl) {
+        input.classList.remove("input-error");
+        errorEl.classList.remove("visible");
+      }
+
+      // Render the holidays list card on page load
+      function renderHolidays(year) {
+        fetchHolidays(year).then(function () {
+          var list = holidaysRawCache[year] || [];
+          holidaysTitle.textContent = "Feriados de Argentina " + year;
+
+          if (list.length === 0) {
+            holidaysSubtitle.textContent = "No se pudieron obtener los feriados";
+            holidaysBody.innerHTML =
+              '<div class="holidays-error">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">' +
+                  '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />' +
+                '</svg>' +
+                '<span>No se pudieron cargar los feriados. Verifica tu conexion a internet.</span>' +
+              '</div>';
+            return;
+          }
+
+          holidaysSubtitle.textContent = list.length + " feriados nacionales";
+
+          var html = '<p class="holidays-count">Se encontraron <strong>' + list.length + ' feriados</strong> para el año ' + year + '</p>';
+          html += '<div class="holidays-list">';
+
+          list.forEach(function (item) {
+            var parts = item.fecha.split("-");
+            var dayNum = parseInt(parts[2], 10);
+            var monthIdx = parseInt(parts[1], 10) - 1;
+            var yearNum = parseInt(parts[0], 10);
+            var dateObj = new Date(yearNum, monthIdx, dayNum);
+            var weekday = weekdayNames[dateObj.getDay()];
+            var monthShort = monthNames[monthIdx];
+
+            var tipoLabel = item.tipo || "Feriado nacional";
+            // Capitalize first letter
+            tipoLabel = tipoLabel.charAt(0).toUpperCase() + tipoLabel.slice(1);
+
+            html += '<div class="holiday-item">';
+            html += '<div class="holiday-date-badge">';
+            html += '<span class="hd-day">' + dayNum + '</span>';
+            html += '<span class="hd-month">' + monthShort + '</span>';
+            html += '</div>';
+            html += '<div class="holiday-info">';
+            html += '<div class="holiday-name">' + item.nombre + '</div>';
+            html += '<div class="holiday-type">' + tipoLabel + '</div>';
+            html += '</div>';
+            html += '<span class="holiday-weekday">' + weekday + '</span>';
+            html += '</div>';
+          });
+
+          html += '</div>';
+          holidaysBody.innerHTML = html;
+        });
+      }
+
+      // Load holidays for the current year on page init
+      renderHolidays(yyyy);
+    })();
+  </script>
+</body>
+</html>
