@@ -1,4 +1,4 @@
-# Calculadora de Dias Habiles - Argentina
+# Calculadora de Dias Habiles - Argentina   <img src="https://github.com/JulianKer/Calculadora-de-dias-habiles/blob/main/icons/calendar-detail.svg" alt="Calendar logo" title="Calendar logo" width="50" align="center"/>
 
 Calculadora web estatica que permite obtener una fecha final a partir de una fecha de inicio y una cantidad de dias habiles, excluyendo automaticamente **fines de semana** y **feriados nacionales de Argentina**.
 
