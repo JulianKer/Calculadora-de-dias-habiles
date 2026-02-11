@@ -491,6 +491,86 @@
       color: var(--color-text);
     }
 
+    /* ===== TOGGLE SWITCH ===== */
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--color-bg);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .toggle-label-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .toggle-label-text {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .toggle-label-desc {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--color-border);
+      border-radius: 24px;
+      transition: background-color var(--transition);
+    }
+
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      border-radius: 50%;
+      transition: transform var(--transition);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: var(--color-primary);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+    }
+
+    .toggle-switch input:focus-visible + .toggle-slider {
+      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.25);
+    }
+
     /* ===== FOOTER ===== */
     .footer-note {
       text-align: center;
@@ -621,6 +701,17 @@
           </div>
         </div>
 
+        <div class="toggle-group">
+          <div class="toggle-label-wrap">
+            <span class="toggle-label-text">Excluir Enero</span>
+            <span class="toggle-label-desc">Todos los días de enero se consideran no hábiles</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="excludeJanuary" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
         <button type="submit" class="btn" id="submitBtn">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75V18m15-8.25-3.09-5.4a2.25 2.25 0 0 0-1.956-1.134H5.808a2.25 2.25 0 0 0-1.956 1.134L.75 9.75m21 0H.75m21 0-1.228 8.59A2.25 2.25 0 0 1 18.29 20.5H5.71a2.25 2.25 0 0 1-2.232-1.91L2.25 9.75" />
@@ -658,11 +749,15 @@
           <span class="result-row-label">Feriados omitidos</span>
           <span class="result-row-value" id="summaryHolidays">--</span>
         </div>
+        <div class="result-row" id="summaryJanuaryRow" style="display:none;">
+          <span class="result-row-label">Días de enero excluidos</span>
+          <span class="result-row-value" id="summaryJanuary">--</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <p class="footer-note">Los días hábiles excluyen sabados, domingos y feriados de Argentina.</p>
+  <p class="footer-note">Los días hábiles excluyen sabados, domingos y feriados de Argentina. Opcionalmente, se puede excluir enero completo.</p>
 
   <!-- HOLIDAYS CARD -->
   <div class="holidays-card" id="holidaysCard">
@@ -702,7 +797,10 @@
       var summaryNatural = document.getElementById("summaryNatural");
       var summaryWeekends = document.getElementById("summaryWeekends");
       var summaryHolidays = document.getElementById("summaryHolidays");
+      var summaryJanuary = document.getElementById("summaryJanuary");
+      var summaryJanuaryRow = document.getElementById("summaryJanuaryRow");
       var submitBtn = document.getElementById("submitBtn");
+      var excludeJanuaryInput = document.getElementById("excludeJanuary");
 
       // Cache de feriados por año: { 2026: Set("2026-01-01", ...), ... }
       var holidaysCache = {};
@@ -861,10 +959,12 @@
 
         Promise.all(promises).then(function (allHolidaySets) {
           // Calculate business days excluding weekends and holidays
+          var excludeJanuary = excludeJanuaryInput.checked;
           var current = new Date(startYear, startMonth, startDay);
           var added = 0;
           var weekendsSkipped = 0;
           var holidaysSkipped = 0;
+          var januaryDaysSkipped = 0;
           var totalNaturalDays = 0;
 
           while (added < businessDays) {
@@ -874,6 +974,8 @@
 
             if (dayOfWeek === 0 || dayOfWeek === 6) {
               weekendsSkipped++;
+            } else if (excludeJanuary && current.getMonth() === 0) {
+              januaryDaysSkipped++;
             } else if (isHoliday(toDateString(current), allHolidaySets)) {
               holidaysSkipped++;
             } else {
@@ -903,6 +1005,13 @@
           summaryNatural.textContent = totalNaturalDays;
           summaryWeekends.textContent = weekendsSkipped;
           summaryHolidays.textContent = holidaysSkipped;
+
+          if (excludeJanuary) {
+            summaryJanuary.textContent = januaryDaysSkipped;
+            summaryJanuaryRow.style.display = "flex";
+          } else {
+            summaryJanuaryRow.style.display = "none";
+          }
 
           resultDivider.style.display = "block";
           resultSection.classList.add("visible");
